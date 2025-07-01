@@ -1,6 +1,6 @@
 # importing FASTAPI Class
 
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path ,Query
 import json ,os
 
 app= FastAPI()
@@ -55,7 +55,31 @@ def view_patient(patient_id:str = Path(...,description="ID of the patient in the
         else:
             raise HTTPException(status_code=404, detail="Patient not found")
     
-   
+@app.get("/sort")
+def sort_patients(
+    sort_by: str = Query(..., description="Sort patients by height, weight, or bmi"),
+    order: str = Query('asc', description="Sort order: asc or desc")
+):
+
+    valid_fields = ["height" , "weight", "bmi"]
+    
+    if sort_by not in valid_fields:
+        raise HTTPException(status_code= 400 , detail= f"Invalid feild, select from {valid_fields}")
+
+    if order not in ['asc', 'desc']:
+        raise HTTPException (status_code =400 , detail= "Invalid order choose from asc or desc")
+
+    sort_order = True if order=='desc' else False
+    
+    # To sort the data as per above query
+    data = load_data()
+    
+    sorted_data = sorted(data.values(),key=lambda x:x.get(sort_by,0),reverse = sort_order)
+    
+    return sorted_data
+    
         
+    
+    
     
 # Command to run : uvicorn filename:appname --reload
