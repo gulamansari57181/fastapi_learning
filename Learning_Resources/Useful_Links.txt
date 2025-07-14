@@ -1,1 +1,12 @@
+RestAPI : https://www.restapitutorial.com/introduction
+	  https://restcookbook.com/
+	  https://www.service-architecture.com/articles/web-services/representational-state-transfer-rest.html
+
+GuidLines To Make Good Rest API : https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md
+
 SSL and HTTPS Beginner Reading : https://howhttps.works/
+OAuth :
+
+
+
+JWT :  
