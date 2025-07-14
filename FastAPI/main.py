@@ -10,7 +10,7 @@ import json , os
 app= FastAPI()
 
 
-# Creating Pydatic Data Model 
+# Creating Pydatic Data Model which will be useful for data validation and constraint restriction
 
 class Patient(BaseModel):
     
@@ -23,7 +23,7 @@ class Patient(BaseModel):
     weight: Annotated[float, Field(..., gt=0, description='Weight of the patient in kgs')]
     
     
-    #To create a new computed field (bmi) from exisiting field such as weight and height
+    #To create a new computed field (bmi) from exisiting field by  weight and height
     @computed_field
     @property
 
@@ -31,7 +31,7 @@ class Patient(BaseModel):
         bmi = round(self.weight/(self.height**2),2)
         return bmi
     #Also we have to comment on verdict based on the bmi of the patient
-    
+    #This is achieve by computed_field functionality provided by pydantic
     @computed_field
     @property
     def verdict(self)->str:
@@ -45,7 +45,7 @@ class Patient(BaseModel):
             return 'Obese'
         
 
-#To tackle update patient detials
+#To tackle update patient detials , we have to create another pydantic object
 class PatientUpdate(BaseModel):
     name: Annotated[Optional[str], Field(default=None)]
     city: Annotated[Optional[str], Field(default=None)]
@@ -70,7 +70,7 @@ def load_data():
      
      
      
-#To save new data of patient into our json file
+#To save new data of patient into our database
 
 def save_data(data):
     #We are getting python dictionary as an input
