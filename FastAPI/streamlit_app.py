@@ -34,7 +34,7 @@ elif menu == "View All":
 
 # 3. View by ID
 elif menu == "View by ID":
-    st.subheader("🔍 Search by Patient ID")
+    st.subheader("Search by Patient ID")
     pid = st.text_input("Enter Patient ID")
     if st.button("Search"):
         res = requests.get(f"{API_URL}/patient/{pid}")
@@ -45,7 +45,7 @@ elif menu == "View by ID":
 
 # 4. Add Patient
 elif menu == "Add Patient":
-    st.subheader("➕ Add New Patient")
+    st.subheader("Add New Patient")
     with st.form("add_form"):
         pid = st.text_input("Patient ID")
         name = st.text_input("Name")
@@ -73,7 +73,7 @@ elif menu == "Add Patient":
 
 # 5. Edit Patient
 elif menu == "Edit Patient":
-    st.subheader("✏️ Edit Patient Info")
+    st.subheader("Edit Patient Info")
     pid = st.text_input("Enter Patient ID to Edit")
     if st.button("Fetch Current Data"):
         res = requests.get(f"{API_URL}/patient/{pid}")
@@ -106,7 +106,7 @@ elif menu == "Edit Patient":
 
 # 6. Delete Patient
 elif menu == "Delete Patient":
-    st.subheader("🗑️ Delete Patient Record")
+    st.subheader("🗑️Delete Patient Record")
     pid = st.text_input("Enter Patient ID to Delete")
     if st.button("Delete"):
         r = requests.delete(f"{API_URL}/delete/{pid}")
@@ -117,7 +117,7 @@ elif menu == "Delete Patient":
 
 # 7. Sort Patients
 elif menu == "Sort Patients":
-    st.subheader("📊 Sort Patient Records")
+    st.subheader("Sort Patient Records")
     sort_by = st.selectbox("Sort by", ["height", "weight", "bmi"])
     order = st.radio("Order", ["asc", "desc"])
     if st.button("Sort"):

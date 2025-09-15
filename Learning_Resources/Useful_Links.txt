@@ -10,3 +10,12 @@ OAuth :
 
 
 JWT :  
+
+
+Link Share By Professor : 
+
+1)https://owasp.org/API-Security/editions/2023/en/0x11-t10/
+
+
+Imp Notes in Docs : https://docs.google.com/document/d/1zMCUe-fgE3j-HLg1wyICWfYPC8tx7DM9XfRssCtYNXA/edit?tab=t.0
+

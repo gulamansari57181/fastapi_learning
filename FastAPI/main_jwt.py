@@ -1,10 +1,24 @@
 # importing FASTAPI Class
 
-from fastapi import FastAPI, Path, HTTPException, Query
+from fastapi import FastAPI, Path, HTTPException, Query , Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, computed_field
 from typing import Annotated, Literal, Optional
 import json , os
+
+#Import module for jwt authentication
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from auth import create_access_token, get_password_hash, verify_password, decode_token
+
+#Adding dummy user database
+users_db = {
+    "admin": {
+        "username": "admin",
+        "full_name": "System Admin",
+        "hashed_password": get_password_hash("adminpass")
+    }
+}
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 app= FastAPI()
@@ -53,6 +67,12 @@ class PatientUpdate(BaseModel):
     gender: Annotated[Optional[Literal['male', 'female']], Field(default=None)]
     height: Annotated[Optional[float], Field(default=None, gt=0)]
     weight: Annotated[Optional[float], Field(default=None, gt=0)]
+    
+    
+#Login BaseModel
+class LoginModel(BaseModel):
+    username: str
+    password: str
 
 # To load our patient data
 def load_data():
@@ -78,6 +98,19 @@ def save_data(data):
     with open("patient.json","w") as f:
         json.dump(data, f)
         
+
+#To implement authorization dependancy      
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    payload = decode_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return payload["sub"]
+
+        
         
 
 #From here onwatds we are creating our endpoints
@@ -91,7 +124,7 @@ def about():
 
 
 
-@app.get("/view")
+@app.get("/view", dependencies=[Depends(get_current_user)])
 
 def view():
     # Loading and return patient data as http response
@@ -100,19 +133,25 @@ def view():
     
 
 # To view specific patient details
+@app.get("/patient/{patient_id}", response_model=Patient, dependencies=[Depends(get_current_user)])
 
-@app.get("/patient/{patient_id}", response_model=Patient)
+
 def view_patient(patient_id:str = Path(...,description="ID of the patient in the database", example="P001")):
     # We will load all the patient data here and then find specific patient
     
         data = load_data()
 
         if patient_id in data:
-            return data[patient_id]
+            patient_info = data[patient_id]
+            # Reattaching the 'id' field before returning
+            patient_info['id'] = patient_id
+            return patient_info
         else:
             raise HTTPException(status_code=404, detail="Patient not found")
+ 
+ 
     
-@app.get("/sort")
+@app.get("/sort", dependencies=[Depends(get_current_user)])
 def sort_patients(
     sort_by: str = Query(..., description="Sort patients by height, weight, or bmi"),
     order: str = Query('asc', description="Sort order: asc or desc")
@@ -138,7 +177,7 @@ def sort_patients(
 
 # endpoint to add patient details into the database after pydantiv validation
 
-@app.post(r"/create")
+@app.post(r"/create", dependencies=[Depends(get_current_user)])
 def create_patient(patient: Patient):
 
     # load existing data
@@ -159,7 +198,7 @@ def create_patient(patient: Patient):
   
 # To create update and delete endpoints
 
-@app.put('/edit/{patient_id}')
+@app.put('/edit/{patient_id}', dependencies=[Depends(get_current_user)])
 def update_patient(patient_id: str, patient_update: PatientUpdate):
 
     data = load_data()
@@ -188,7 +227,7 @@ def update_patient(patient_id: str, patient_update: PatientUpdate):
 
     return JSONResponse(status_code=200, content={'message':'patient updated'})
 
-@app.delete(r'/delete/{patient_id}')
+@app.delete(r'/delete/{patient_id}', dependencies=[Depends(get_current_user)])
 def delete_patient(patient_id: str):
 
     # load data
@@ -202,6 +241,21 @@ def delete_patient(patient_id: str):
     save_data(data)
 
     return JSONResponse(status_code=200, content={'message':'patient deleted'})
+
+
+#To implement login auth
+@app.post("/token")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = users_db.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user["username"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+
   
     
 # To launch server I am using this command : uvicorn filename:appname --reload
